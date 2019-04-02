@@ -1,4 +1,4 @@
-# 
+#
 msgid ""
 msgstr "Content-Type: text/plain; charset=utf-8\n"
 
@@ -10,7 +10,15 @@ msgctxt "field:account.invoice,company_tax_amount:"
 msgid "Tax (Company Currency)"
 msgstr "Impostos (Moneda empresa)"
 
+msgctxt "field:account.invoice,company_tax_amount_cache:"
+msgid "Tax (Company Currency)"
+msgstr "Impostos (Moneda empresa)"
+
 msgctxt "field:account.invoice,company_total_amount:"
+msgid "Total (Company Currency)"
+msgstr "Total (Moneda empresa)"
+
+msgctxt "field:account.invoice,company_total_amount_cache:"
 msgid "Total (Company Currency)"
 msgstr "Total (Moneda empresa)"
 
@@ -18,6 +26,30 @@ msgctxt "field:account.invoice,company_untaxed_amount:"
 msgid "Untaxed (Company Currency)"
 msgstr "Base imposable (Moneda empresa)"
 
+msgctxt "field:account.invoice,company_untaxed_amount_cache:"
+msgid "Untaxed (Company Currency)"
+msgstr "Base imposable (Moneda empresa)"
+
 msgctxt "field:account.invoice,different_currencies:"
 msgid "Different Currencies"
 msgstr "Monedes diferents"
+
+msgctxt "field:account.invoice.line,company_amount:"
+msgid "Amount (Company Currency)"
+msgstr "Import (Moneda de la empresa)"
+
+msgctxt "field:account.invoice.line,company_currency_digits:"
+msgid "Currency Digits"
+msgstr "Dígits de la moneda"
+
+msgctxt "field:account.invoice.tax,company_amount:"
+msgid "Amount (Company Currency)"
+msgstr "Import (Moneda de la empresa)"
+
+msgctxt "field:account.invoice.tax,company_base:"
+msgid "Base (Company Currency)"
+msgstr "Base (Moneda de la empresa)"
+
+msgctxt "field:account.invoice.tax,company_currency_digits:"
+msgid "Currency Digits"
+msgstr "Dígits de la moneda"
