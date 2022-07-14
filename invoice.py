@@ -67,6 +67,52 @@ class Invoice(metaclass=PoolMeta):
             return self.company.currency.digits
         return 2
 
+    def get_company_quantities(self, fname=None):
+        cursor = Transaction().connection.cursor()
+
+        totals = {t:0 for t in [
+            'total_amount', 'untaxed_amount', 'tax_amount']}
+
+        if self.type == 'out':
+            values = ('aml.debit - aml.credit ', 'aml.credit - aml.debit ',
+                'aml.credit - aml.debit ', self.id)
+        else:
+            values = ('aml.credit - aml.debit ', 'aml.debit - aml.credit ',
+                'aml.debit - aml.credit ', self.id)
+
+        query = ('SELECT ai.id, '
+            'CASE WHEN aml.account = ai.account '
+                'THEN %s'
+                'ELSE 0 '
+                'END AS total_amount,'
+            'CASE WHEN aml.account = ANY(ail.accounts) '
+                'THEN %s'
+                'ELSE 0 '
+                'END AS untaxed_amount, '
+            'CASE WHEN aml.account NOT IN (ai.account) AND '
+                'NOT (aml.account = ANY(ail.accounts)) '
+                'THEN %s'
+                'ELSE 0 '
+                'END AS tax_amount '
+            'FROM account_invoice AS ai '
+                'JOIN account_move AS am ON ai.move = am.id '
+                'JOIN account_move_line AS aml ON aml.move = am.id '
+                'JOIN (SELECT array_agg(account) AS accounts, invoice '
+                    'FROM account_invoice_line GROUP BY invoice) ail '
+                    'ON ail.invoice = ai.id '
+            'WHERE ai.id =%s' % values)
+
+        cursor.execute(query)
+
+        for _, total_amount, untaxed_amount, tax_amount in cursor.fetchall():
+            totals['total_amount'] += total_amount
+            totals['untaxed_amount'] += untaxed_amount
+            totals['tax_amount'] += tax_amount
+
+        if fname:
+            return totals[fname]
+        return totals
+
     @classmethod
     def get_amount(cls, invoices, names):
         pool = Pool()
@@ -85,11 +131,14 @@ class Invoice(metaclass=PoolMeta):
                     if getattr(invoice, '%s_cache' % fname):
                         value = getattr(invoice, '%s_cache' % fname)
                     else:
-                        with Transaction().set_context(
-                                date=invoice.currency_date):
-                            value = Currency.compute(invoice.currency,
-                                result[fname[8:]][invoice.id],
-                                invoice.company.currency, round=True)
+                        if invoice.move:
+                            value = invoice.get_company_quantities(fname.replace('company_', ''))
+                        else:
+                            with Transaction().set_context(
+                                    date=invoice.currency_date):
+                                value = Currency.compute(invoice.currency,
+                                    result[fname[8:]][invoice.id],
+                                    invoice.company.currency, round=True)
                     result.setdefault(fname, {})[invoice.id] = value
         for key in list(result.keys()):
             if key not in names:
@@ -142,13 +191,19 @@ class Invoice(metaclass=PoolMeta):
     def _save_company_currency_amounts(cls, invoice):
         pool = Pool()
         Currency = pool.get('currency.currency')
-        with Transaction().set_context(date=invoice.currency_date):
-            values = {}
+
+        values = {}
+        if invoice.move:
             for fname in ('untaxed_amount', 'tax_amount', 'total_amount'):
-                value = Currency.compute(invoice.currency,
-                    getattr(invoice, fname), invoice.company.currency,
-                    round=True)
+                value = invoice.get_company_quantities(fname)
                 values['company_%s_cache' % fname] = value
+        else:
+            with Transaction().set_context(date=invoice.currency_date):
+                for fname in ('untaxed_amount', 'tax_amount', 'total_amount'):
+                    value = Currency.compute(invoice.currency,
+                        getattr(invoice, fname), invoice.company.currency,
+                        round=True)
+                    values['company_%s_cache' % fname] = value
         return values
 
 
