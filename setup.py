@@ -12,7 +12,7 @@ import io
 from configparser import ConfigParser
 
 MODULE = 'account_invoice_company_currency'
-PREFIX = 'trytonspain'
+PREFIX = 'nantic'
 MODULE2PREFIX = {}
 
 
@@ -53,8 +53,7 @@ requires.append(get_require_version('trytond'))
 requires += [get_require_version('trytond_account_invoice'),get_require_version('trytond_currency')]
 
 tests_require = [
-    get_require_version('proteus'),
-
+    get_require_version('proteus')
     ]
 
 series = '%s.%s' % (major_version, minor_version)
@@ -69,13 +68,14 @@ if minor_version % 2:
     # Add development index for testing with proteus
     dependency_links.append('https://trydevpi.tryton.org/')
 
-setup(name='%s_%s' % (PREFIX, MODULE),
+setup(
+    name='%s_%s' % (PREFIX, MODULE),
     version=version,
     description='',
     long_description=read('README'),
     author='trytonspain',
     url='http://www.nan-tic.com/',
-    download_url='https://github.com:trytonspain/trytond-account_invoice_company_currency',
+    download_url='https://github.com/NaN-tic/trytond-%s' % MODULE,
     package_dir={'trytond.modules.%s' % MODULE: '.'},
     packages=[
         'trytond.modules.%s' % MODULE,
@@ -111,6 +111,5 @@ setup(name='%s_%s' % (PREFIX, MODULE),
     """ % (MODULE, MODULE),
     test_suite='tests',
     test_loader='trytond.test_loader:Loader',
-    tests_require=tests_require,
-
-    )
+    tests_require=tests_require
+)
