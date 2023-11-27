@@ -264,10 +264,14 @@ class InvoiceLine(metaclass=PoolMeta):
         pool = Pool()
         Date = pool.get('ir.date')
         Currency = pool.get('currency.currency')
-        if self.invoice.currency == self.invoice.company.currency:
+
+        currency = self.invoice and self.invoice.currency or self.currency
+        currency_date = self.invoice and self.invoice.currency_date or Date.today()
+        company = self.invoice.company or self.company
+
+        if currency == company.currency:
             return self.amount
-        with Transaction().set_context(date=self.invoice.currency_date
-                or Date.today()):
-            return Currency.compute(self.invoice.currency,
-                    self.amount,
-                    self.invoice.company.currency, round=True)
+
+        with Transaction().set_context(date=currency_date):
+            return Currency.compute(currency, self.amount, company.currency,
+                round=True)
