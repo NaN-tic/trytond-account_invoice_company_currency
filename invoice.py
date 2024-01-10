@@ -25,13 +25,13 @@ class Invoice(metaclass=PoolMeta):
     company_untaxed_amount = fields.Function(Monetary('Untaxed (Company Currency)',
         digits='company_currency', currency='company_currency', states={
             'invisible': ~Eval('different_currencies', False),
-        }, depends=['different_currencies']), 'get_amount')
+        }), 'get_amount')
     company_tax_amount_cache = Monetary('Tax (Company Currency)',
         digits='company_currency', currency='company_currency', readonly=True)
     company_tax_amount = fields.Function(Monetary('Tax (Company Currency)',
         digits='company_currency', currency='company_currency', states={
             'invisible': ~Eval('different_currencies', False),
-        }, depends=['different_currencies']), 'get_amount')
+        }), 'get_amount')
     company_total_amount_cache = Monetary('Total (Company Currency)',
         digits='company_currency', currency='company_currency', readonly=True)
     company_total_amount = fields.Function(Monetary('Total (Company Currency)',
