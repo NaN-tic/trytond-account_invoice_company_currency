@@ -37,8 +37,7 @@ class Invoice(metaclass=PoolMeta):
     company_total_amount = fields.Function(Monetary('Total (Company Currency)',
         digits='company_currency', currency='company_currency', states={
             'invisible': ~Eval('different_currencies', False),
-            },
-        depends=['different_currencies']), 'get_amount')
+            }), 'get_amount')
 
     @classmethod
     def __setup__(cls):
