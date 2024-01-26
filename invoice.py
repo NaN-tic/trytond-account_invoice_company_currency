@@ -254,10 +254,12 @@ class InvoiceLine(metaclass=PoolMeta):
         digits='company_currency', currency='company_currency'),
         'get_company_amount')
 
-    @fields.depends('invoice', '_parent_invoice.company')
+    @fields.depends('invoice', 'currency', '_parent_invoice.company')
     def on_change_with_company_currency(self, name=None):
         if self.invoice and self.invoice.company.currency:
             return self.invoice.company.currency.id
+        elif self.currency:
+            return self.currency.id
 
     def get_company_amount(self, name):
         pool = Pool()
