@@ -269,7 +269,7 @@ class InvoiceLine(metaclass=PoolMeta):
 
         currency = self.invoice and self.invoice.currency or self.currency
         currency_date = self.invoice and self.invoice.currency_date or Date.today()
-        company = self.invoice.company or self.company
+        company = self.invoice and self.invoice.company or self.company
 
         if currency == company.currency:
             return self.amount
