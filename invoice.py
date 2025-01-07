@@ -58,6 +58,8 @@ class Invoice(metaclass=PoolMeta):
             return self.company.currency.id
 
     def get_company_quantities(self, fname):
+        Currency = Pool().get('currency.currency')
+
         cursor = Transaction().connection.cursor()
 
         totals = 0
@@ -108,7 +110,9 @@ class Invoice(metaclass=PoolMeta):
             cursor.execute(query)
 
         for _, value in cursor.fetchall():
-            totals += self.currency.round(Decimal(value))
+            # compute currency company in case currency has not digits
+            totals += Currency.compute(self.company.currency, Decimal(value),
+                self.company.currency, round=True)
 
         return totals
 
