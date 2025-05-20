@@ -40,21 +40,19 @@ major_version = int(major_version)
 minor_version = int(minor_version)
 
 requires = []
-
 for dep in info.get('depends', []):
     if not re.match(r'(ir|res)(\W|$)', dep):
         prefix = MODULE2PREFIX.get(dep, 'trytond')
         requires.append(get_require_version('%s_%s' % (prefix, dep)))
 requires.append(get_require_version('trytond'))
-requires += [get_require_version('trytond_account_invoice'),get_require_version('trytond_currency')]
 
 tests_require = [
-    get_require_version('proteus')
-    ]
+    get_require_version('proteus'),
+]
 
 series = '%s.%s' % (major_version, minor_version)
 if minor_version % 2:
-    branch = 'master'
+    branch = 'default'
 else:
     branch = series
 
@@ -64,14 +62,14 @@ if minor_version % 2:
     # Add development index for testing with proteus
     dependency_links.append('https://trydevpi.tryton.org/')
 
-setup(
-    name='%s_%s' % (PREFIX, MODULE),
+setup(name='%s_%s' % (PREFIX, MODULE),
     version=version,
     description='',
     long_description=read('README'),
-    author='trytonspain',
+    author='NaN·tic',
+    author_email='info@nan-tic.com',
     url='http://www.nan-tic.com/',
-    download_url='https://github.com/NaN-tic/trytond-%s' % MODULE,
+    download_url="https://bitbucket.org/nantic/trytond-%s" % MODULE,
     package_dir={'trytond.modules.%s' % MODULE: '.'},
     packages=[
         'trytond.modules.%s' % MODULE,
@@ -79,7 +77,7 @@ setup(
         ],
     package_data={
         'trytond.modules.%s' % MODULE: (info.get('xml', [])
-            + ['tryton.cfg', 'locale/*.po', 'tests/*.rst', 'view/*.xml']),
+            + ['tryton.cfg', 'locale/*.po', 'tests/*.rst']),
         },
     classifiers=[
         'Development Status :: 5 - Production/Stable',
@@ -89,12 +87,22 @@ setup(
         'Intended Audience :: Financial and Insurance Industry',
         'Intended Audience :: Legal Industry',
         'License :: OSI Approved :: GNU General Public License (GPL)',
+        'Natural Language :: Bulgarian',
         'Natural Language :: Catalan',
+        'Natural Language :: Czech',
+        'Natural Language :: Dutch',
         'Natural Language :: English',
+        'Natural Language :: French',
+        'Natural Language :: German',
+        'Natural Language :: Russian',
         'Natural Language :: Spanish',
         'Operating System :: OS Independent',
+        'Programming Language :: Python :: 2.7',
+        'Programming Language :: Python :: 3.4',
+        'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
-        'Programming Language :: Python :: 3.7',
+        'Programming Language :: Python :: Implementation :: CPython',
+        'Programming Language :: Python :: Implementation :: PyPy',
         'Topic :: Office/Business',
         ],
     license='GPL-3',
@@ -107,5 +115,5 @@ setup(
     """ % (MODULE, MODULE),
     test_suite='tests',
     test_loader='trytond.test_loader:Loader',
-    tests_require=tests_require
-)
+    tests_require=tests_require,
+    )
