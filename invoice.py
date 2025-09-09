@@ -104,8 +104,9 @@ class Invoice(metaclass=PoolMeta):
                     'JOIN account_move AS am ON ai.move = am.id '
                     'JOIN account_move_line AS aml ON aml.move = am.id '
                 'WHERE ai.id =%s AND aml.account != ai.account AND '
-                'aml.account NOT IN (SELECT account '
-                    'FROM account_invoice_line WHERE invoice = %s)' % values)
+                'aml.account IN (SELECT account '
+                    'FROM account_invoice_tax WHERE invoice = %s)' % values)
+
         if cursor:
             cursor.execute(query)
 
