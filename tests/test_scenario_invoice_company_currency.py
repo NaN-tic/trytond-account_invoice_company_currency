@@ -32,7 +32,7 @@ class Test(unittest.TestCase):
         today = datetime.date.today()
 
         # Install account_invoice_company_currency
-        activate_modules('account_invoice_company_currency')
+        config = activate_modules('account_invoice_company_currency')
 
         # Create currencies
         usd = get_currency(code='USD')
@@ -189,13 +189,44 @@ class Test(unittest.TestCase):
         self.assertEqual(invoice.company_tax_amount, Decimal('10.00'))
         self.assertEqual(invoice.company_total_amount, Decimal('120.00'))
 
-        invoice.click('post')
+        invoice.click('validate_invoice')
 
         self.assertEqual(invoice.different_currencies, True)
-        self.assertEqual(invoice.state, 'posted')
+        self.assertEqual(invoice.state, 'validated')
         self.assertEqual(invoice.untaxed_amount, Decimal('220.00'))
         self.assertEqual(invoice.tax_amount, Decimal('20.00'))
         self.assertEqual(invoice.total_amount, Decimal('240.00'))
         self.assertEqual(invoice.company_untaxed_amount, Decimal('110.00'))
         self.assertEqual(invoice.company_tax_amount, Decimal('10.00'))
         self.assertEqual(invoice.company_total_amount, Decimal('120.00'))
+
+        self.assertEqual(invoice.company_untaxed_amount_cache, invoice.company_untaxed_amount)
+        self.assertEqual(invoice.company_tax_amount_cache, invoice.company_tax_amount)
+        self.assertEqual(invoice.company_total_amount, invoice.company_total_amount)
+        self.assertEqual([(t.company_base, t.company_amount) for t in invoice.taxes], [(t.company_base_cache, t.company_amount_cache) for t in invoice.taxes])
+        self.assertEqual([(t.company_amount) for t in invoice.lines], [(t.company_amount_cache) for t in invoice.lines])
+
+        invoice.click('draft')
+        self.assertEqual(invoice.state, 'draft')
+        self.assertEqual(invoice.company_untaxed_amount_cache, None)
+        self.assertEqual(invoice.company_tax_amount_cache, None)
+        self.assertEqual(invoice.company_total_amount_cache, None)
+        self.assertEqual([(t.company_base_cache, t.company_amount_cache) for t in invoice.taxes], [(None, None)])
+        self.assertEqual([t.company_amount_cache for t in invoice.lines], [None, None])
+
+        invoice.click('post')
+        self.assertEqual(invoice.state, 'posted')
+        self.assertEqual(invoice.company_untaxed_amount_cache, invoice.company_untaxed_amount)
+        self.assertEqual(invoice.company_tax_amount_cache, invoice.company_tax_amount)
+        self.assertEqual(invoice.company_total_amount, invoice.company_total_amount)
+        self.assertEqual([(t.company_base, t.company_amount) for t in invoice.taxes], [(t.company_base_cache, t.company_amount_cache) for t in invoice.taxes])
+        self.assertEqual([(t.company_amount) for t in invoice.lines], [(t.company_amount_cache) for t in invoice.lines])
+
+        invoice_id, = Invoice.copy([invoice], config.context)
+        invoice = Invoice(invoice_id)
+        self.assertEqual(invoice.state, 'draft')
+        self.assertEqual(invoice.company_untaxed_amount_cache, None)
+        self.assertEqual(invoice.company_tax_amount_cache, None)
+        self.assertEqual(invoice.company_total_amount_cache, None)
+        self.assertEqual([(t.company_base_cache, t.company_amount_cache) for t in invoice.taxes], [(None, None)])
+        self.assertEqual([t.company_amount_cache for t in invoice.lines], [None, None])
