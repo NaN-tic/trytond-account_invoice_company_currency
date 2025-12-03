@@ -8,8 +8,6 @@ from trytond.pyson import Eval
 from trytond.transaction import Transaction
 from trytond.modules.currency.fields import Monetary
 
-__all__ = ['Invoice', 'InvoiceTax', 'InvoiceLine']
-
 
 class Invoice(metaclass=PoolMeta):
     __name__ = 'account.invoice'
@@ -41,7 +39,7 @@ class Invoice(metaclass=PoolMeta):
 
     @classmethod
     def __setup__(cls):
-        super(Invoice, cls).__setup__()
+        super().__setup__()
         extra_excludes = {'company_total_amount_cache',
             'company_tax_amount_cache', 'company_untaxed_amount_cache'}
         cls._check_modify_exclude |= extra_excludes
@@ -126,15 +124,14 @@ class Invoice(metaclass=PoolMeta):
         for fname in ('untaxed_amount', 'tax_amount', 'total_amount'):
             if 'company_%s' % fname in names and fname not in new_names:
                 new_names.append(fname)
-        result = super(Invoice, cls).get_amount(invoices, new_names)
+        result = super().get_amount(invoices, new_names)
 
         company_names = [n for n in names if n.startswith('company_')]
         if company_names:
             for invoice in invoices:
                 for fname in company_names:
-                    if getattr(invoice, '%s_cache' % fname):
-                        value = getattr(invoice, '%s_cache' % fname)
-                    else:
+                    value = getattr(invoice, '%s_cache' % fname)
+                    if value is None:
                         if invoice.move:
                             value = invoice.get_company_quantities(fname.replace('company_', ''))
                         else:
@@ -150,36 +147,33 @@ class Invoice(metaclass=PoolMeta):
         return result
 
     @classmethod
-    def validate_invoice(cls, invoices):
-        to_write = []
-        for invoice in invoices:
-            if invoice.type == 'in':
-                values = cls._save_company_currency_amounts(invoice)
-                to_write.extend(([invoice], values))
-        if to_write:
-            cls.write(*to_write)
-        super(Invoice, cls).validate_invoice(invoices)
-
-    @classmethod
-    def post(cls, invoices):
-        super(Invoice, cls).post(invoices)
-        # Save amounts after posting as their computation is faster
-        to_write = []
-        for invoice in invoices:
-            values = cls._save_company_currency_amounts(invoice)
-            to_write.extend(([invoice], values))
-        if to_write:
-            cls.write(*to_write)
-
-    @classmethod
     def draft(cls, invoices):
+        pool = Pool()
+        InvoiceLine = pool.get('account.invoice.line')
+        InvoiceTax = pool.get('account.invoice.tax')
+
         to_write = [invoices, {
                 'company_untaxed_amount_cache': None,
                 'company_tax_amount_cache': None,
                 'company_total_amount_cache': None,
                 }]
         cls.write(*to_write)
-        super(Invoice, cls).draft(invoices)
+
+        line_to_write = []
+        tax_to_write = []
+        for invoice in invoices:
+            line_to_write += list(invoice.lines or [])
+            tax_to_write += list(invoice.taxes or [])
+
+        InvoiceLine.write(line_to_write, {
+            'company_amount_cache': None,
+            })
+        InvoiceTax.write(tax_to_write, {
+            'company_base_cache': None,
+            'company_amount_cache': None,
+            })
+
+        super().draft(invoices)
 
     @classmethod
     def copy(cls, invoices, default=None):
@@ -189,26 +183,43 @@ class Invoice(metaclass=PoolMeta):
         default['company_untaxed_amount_cache'] = None
         default['company_tax_amount_cache'] = None
         default['company_total_amount_cache'] = None
-        return super(Invoice, cls).copy(invoices, default=default)
+        return super().copy(invoices, default=default)
 
     @classmethod
-    def _save_company_currency_amounts(cls, invoice):
+    def _store_cache(cls, invoices):
         pool = Pool()
-        Currency = pool.get('currency.currency')
+        InvoiceLine = pool.get('account.invoice.line')
+        InvoiceTax = pool.get('account.invoice.tax')
 
-        values = {}
-        if invoice.move:
-            for fname in ('untaxed_amount', 'tax_amount', 'total_amount'):
-                value = invoice.get_company_quantities(fname)
-                values['company_%s_cache' % fname] = value
-        else:
-            with Transaction().set_context(date=invoice.currency_date):
-                for fname in ('untaxed_amount', 'tax_amount', 'total_amount'):
-                    value = Currency.compute(invoice.currency,
-                        getattr(invoice, fname), invoice.company.currency,
-                        round=True)
-                    values['company_%s_cache' % fname] = value
-        return values
+        line_to_write = []
+        tax_to_write = []
+        for invoice in invoices:
+            if (invoice.company_untaxed_amount == invoice.company_untaxed_amount_cache
+                    and invoice.company_tax_amount == invoice.company_tax_amount_cache
+                    and invoice.company_total_amount == invoice.company_total_amount_cache):
+                continue
+            invoice.company_untaxed_amount_cache = invoice.company_untaxed_amount
+            invoice.company_tax_amount_cache = invoice.company_tax_amount
+            invoice.company_total_amount_cache = invoice.company_total_amount
+
+            for line in invoice.lines:
+                line_to_write.extend(([line], {
+                    'company_amount_cache': line.company_amount,
+                    }))
+
+            for line in invoice.taxes:
+                tax_to_write.extend(([line], {
+                    'company_base_cache': line.company_base,
+                    'company_amount_cache': line.company_amount,
+                    }))
+
+        super()._store_cache(invoices)
+
+        if line_to_write:
+            InvoiceLine.write(*line_to_write)
+
+        if tax_to_write:
+            InvoiceTax.write(*tax_to_write)
 
 
 class InvoiceTax(metaclass=PoolMeta):
@@ -221,12 +232,25 @@ class InvoiceTax(metaclass=PoolMeta):
             'invisible': ~Eval('_parent_invoice',
                     {}).get('different_currencies', False),
         }), 'get_amount')
+    company_base_cache = Monetary('Base (Company Currency)',
+        digits='company_currency', currency='company_currency', readonly=True)
     company_amount = fields.Function(Monetary('Amount (Company Currency)',
         currency='company_currency', digits='company_currency',
         states={
             'invisible': ~Eval('_parent_invoice',
                     {}).get('different_currencies', False),
         }), 'get_amount')
+    company_amount_cache = Monetary('Amount (Company Currency)',
+        digits='company_currency', currency='company_currency', readonly=True)
+
+    @classmethod
+    def copy(cls, taxes, default=None):
+        if default is None:
+            default = {}
+        default = default.copy()
+        default['company_base_cache'] = None
+        default['company_amount_cache'] = None
+        return super().copy(taxes, default=default)
 
     @fields.depends('invoice', '_parent_invoice.company')
     def on_change_with_company_currency(self, name=None):
@@ -241,11 +265,13 @@ class InvoiceTax(metaclass=PoolMeta):
         result = {}
         for invoice_tax in invoice_taxes:
             for fname in names:
-                with Transaction().set_context(
-                        date=invoice_tax.invoice.currency_date):
-                    value = Currency.compute(invoice_tax.invoice.currency,
-                        getattr(invoice_tax, fname[8:]),
-                        invoice_tax.invoice.company.currency, round=True)
+                value = getattr(invoice_tax, '%s_cache' % fname)
+                if value is None:
+                    with Transaction().set_context(
+                            date=invoice_tax.invoice.currency_date):
+                        value = Currency.compute(invoice_tax.invoice.currency,
+                            getattr(invoice_tax, fname[8:]),
+                            invoice_tax.invoice.company.currency, round=True)
                 result.setdefault(fname, {})[invoice_tax.id] = value
         return result
 
@@ -258,6 +284,16 @@ class InvoiceLine(metaclass=PoolMeta):
     company_amount = fields.Function(Monetary('Amount (Company Currency)',
         digits='company_currency', currency='company_currency'),
         'get_company_amount')
+    company_amount_cache = Monetary('Amount (Company Currency)',
+        digits='company_currency', currency='company_currency', readonly=True)
+
+    @classmethod
+    def copy(cls, lines, default=None):
+        if default is None:
+            default = {}
+        default = default.copy()
+        default['company_amount_cache'] = None
+        return super().copy(lines, default=default)
 
     @fields.depends('invoice', 'currency', '_parent_invoice.company')
     def on_change_with_company_currency(self, name=None):
@@ -266,7 +302,7 @@ class InvoiceLine(metaclass=PoolMeta):
         elif self.currency:
             return self.currency.id
 
-    def get_company_amount(self, name):
+    def get_company_amount(self, name=None):
         pool = Pool()
         Date = pool.get('ir.date')
         Currency = pool.get('currency.currency')
@@ -277,6 +313,9 @@ class InvoiceLine(metaclass=PoolMeta):
 
         if currency == company.currency:
             return self.amount
+
+        if self.company_amount_cache is not None:
+            return self.company_amount_cache
 
         with Transaction().set_context(date=currency_date):
             return Currency.compute(currency, self.amount, company.currency,
