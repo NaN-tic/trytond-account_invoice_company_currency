@@ -165,6 +165,8 @@ class Invoice(metaclass=PoolMeta):
             line_to_write += list(invoice.lines or [])
             tax_to_write += list(invoice.taxes or [])
 
+        super().draft(invoices)
+
         InvoiceLine.write(line_to_write, {
             'company_amount_cache': None,
             })
@@ -172,8 +174,6 @@ class Invoice(metaclass=PoolMeta):
             'company_base_cache': None,
             'company_amount_cache': None,
             })
-
-        super().draft(invoices)
 
     @classmethod
     def copy(cls, invoices, default=None):
@@ -286,6 +286,12 @@ class InvoiceLine(metaclass=PoolMeta):
         'get_company_amount')
     company_amount_cache = Monetary('Amount (Company Currency)',
         digits='company_currency', currency='company_currency', readonly=True)
+
+    @classmethod
+    def __setup__(cls):
+        super().__setup__()
+        extra_excludes = {'company_amount_cache'}
+        cls._check_modify_exclude |= extra_excludes
 
     @classmethod
     def copy(cls, lines, default=None):
