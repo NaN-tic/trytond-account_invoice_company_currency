@@ -6,6 +6,14 @@ msgctxt "field:account.invoice,company_currency:"
 msgid "Company Currency"
 msgstr "Moneda empressa"
 
+msgctxt "field:account.invoice,company_amount_to_pay_today:"
+msgid "Amount to Pay Today (Company Currency)"
+msgstr "Import a pagar avui (Moneda empresa)"
+
+msgctxt "field:account.invoice,company_amount_to_pay:"
+msgid "Amount to Pay (Company Currency)"
+msgstr "Import a pagar (Moneda empresa)"
+
 msgctxt "field:account.invoice,company_tax_amount:"
 msgid "Tax (Company Currency)"
 msgstr "Impostos (Moneda empresa)"
