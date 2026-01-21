@@ -1,6 +1,8 @@
 # The COPYRIGHT file at the top level of this repository contains the full
 # copyright notices and license terms.
+from collections import defaultdict
 from decimal import Decimal
+from itertools import groupby
 
 from trytond.model import fields
 from trytond.pool import Pool, PoolMeta
@@ -36,6 +38,16 @@ class Invoice(metaclass=PoolMeta):
         digits='company_currency', currency='company_currency', states={
             'invisible': ~Eval('different_currencies', False),
             }), 'get_amount')
+    company_amount_to_pay_today = fields.Function(
+        Monetary('Amount to Pay Today (Company Currency)',
+            digits='company_currency', currency='company_currency', states={
+                'invisible': ~Eval('different_currencies', False),
+            }), 'get_company_amount_to_pay')
+    company_amount_to_pay = fields.Function(
+        Monetary('Amount to Pay (Company Currency)',
+            digits='company_currency', currency='company_currency', states={
+                'invisible': ~Eval('different_currencies', False),
+            }), 'get_company_amount_to_pay')
 
     @classmethod
     def __setup__(cls):
@@ -54,6 +66,37 @@ class Invoice(metaclass=PoolMeta):
     def on_change_with_company_currency(self, name=None):
         if self.company and self.company.currency:
             return self.company.currency.id
+
+    @classmethod
+    def get_company_amount_to_pay(cls, invoices, name):
+        pool = Pool()
+        Date = pool.get('ir.date')
+
+        amounts = defaultdict(Decimal)
+        for company, grouped_invoices in groupby(
+                invoices, key=lambda i: i.company):
+            with Transaction().set_context(company=company.id):
+                today = Date.today()
+            for invoice in grouped_invoices:
+                if invoice.state != 'posted':
+                    continue
+                amount = Decimal(0)
+                for line in invoice.lines_to_pay:
+                    if line.reconciliation:
+                        continue
+                    if (name == 'company_amount_to_pay_today'
+                            and (not line.maturity_date
+                                or line.maturity_date > today)):
+                        continue
+                    amount += line.debit - line.credit
+                for line in invoice.payment_lines:
+                    if line.reconciliation:
+                        continue
+                    amount += line.debit - line.credit
+                if invoice.type == 'in' and amount:
+                    amount *= -1
+                amounts[invoice.id] = amount
+        return amounts
 
     def get_company_quantities(self, fname):
         Currency = Pool().get('currency.currency')
