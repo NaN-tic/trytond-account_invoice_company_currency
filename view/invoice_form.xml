@@ -11,4 +11,11 @@
         <label name="company_total_amount" xalign="1.0" xexpand="1"/>
         <field name="company_total_amount" xalign="1.0" xexpand="0"/>
     </xpath>
+    <xpath expr="/form/notebook/page[@id='payment']/field[@name='amount_to_pay']"
+            position="after">
+        <label name="company_amount_to_pay_today"/>
+        <field name="company_amount_to_pay_today"/>
+        <label name="company_amount_to_pay"/>
+        <field name="company_amount_to_pay"/>
+    </xpath>
 </data>
