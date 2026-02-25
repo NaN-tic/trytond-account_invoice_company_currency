@@ -110,7 +110,7 @@ class Test(unittest.TestCase):
 
         # Create invoice with company currency
         Invoice = Model.get('account.invoice')
-        invoice = Invoice()
+        invoice = Invoice(type='out')
         invoice.party = party
         invoice.payment_term = payment_term
         invoice.currency = usd
@@ -156,7 +156,7 @@ class Test(unittest.TestCase):
 
         # Create invoice with alternate currency
         Invoice = Model.get('account.invoice')
-        invoice = Invoice()
+        invoice = Invoice(type='out')
         invoice.party = party
         invoice.payment_term = payment_term
         invoice.currency = eur
