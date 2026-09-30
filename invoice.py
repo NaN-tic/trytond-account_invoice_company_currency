@@ -4,7 +4,7 @@ from collections import defaultdict
 from decimal import Decimal
 from itertools import groupby
 
-from trytond.model import fields
+from trytond.model import ModelView, fields
 from trytond.pool import Pool, PoolMeta
 from trytond.pyson import Eval
 from trytond.transaction import Transaction
@@ -190,6 +190,7 @@ class Invoice(metaclass=PoolMeta):
         return result
 
     @classmethod
+    @ModelView.button
     def draft(cls, invoices):
         pool = Pool()
         InvoiceLine = pool.get('account.invoice.line')
