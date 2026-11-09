@@ -1,0 +1,80 @@
+#
+msgid ""
+msgstr ""
+"Language: hu\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+msgctxt "field:account.invoice,company_currency:"
+msgid "Company Currency"
+msgstr "Vállalat pénzneme"
+
+msgctxt "field:account.invoice,company_amount_to_pay_today:"
+msgid "Amount to Pay Today (Company Currency)"
+msgstr "Ma fizetendő összeg (vállalati pénznem)"
+
+msgctxt "field:account.invoice,company_amount_to_pay:"
+msgid "Amount to Pay (Company Currency)"
+msgstr "Fizetendő összeg (vállalati pénznem)"
+
+msgctxt "field:account.invoice,company_tax_amount:"
+msgid "Tax (Company Currency)"
+msgstr "Adó (vállalati pénznem)"
+
+msgctxt "field:account.invoice,company_tax_amount_cache:"
+msgid "Tax (Company Currency)"
+msgstr "Adó (vállalati pénznem)"
+
+msgctxt "field:account.invoice,company_total_amount:"
+msgid "Total (Company Currency)"
+msgstr "Összesen (vállalati pénznem)"
+
+msgctxt "field:account.invoice,company_total_amount_cache:"
+msgid "Total (Company Currency)"
+msgstr "Összesen (vállalati pénznem)"
+
+msgctxt "field:account.invoice,company_untaxed_amount:"
+msgid "Untaxed (Company Currency)"
+msgstr "Nettó összeg (vállalati pénznem)"
+
+msgctxt "field:account.invoice,company_untaxed_amount_cache:"
+msgid "Untaxed (Company Currency)"
+msgstr "Nettó összeg (vállalati pénznem)"
+
+msgctxt "field:account.invoice,different_currencies:"
+msgid "Different Currencies"
+msgstr "Eltérő pénznemek"
+
+msgctxt "field:account.invoice.line,company_amount:"
+msgid "Amount (Company Currency)"
+msgstr "Összeg (vállalati pénznem)"
+
+msgctxt "field:account.invoice.line,company_currency:"
+msgid "Company Currency"
+msgstr "Vállalat pénzneme"
+
+msgctxt "field:account.invoice.tax,company_amount:"
+msgid "Amount (Company Currency)"
+msgstr "Összeg (vállalati pénznem)"
+
+msgctxt "field:account.invoice.tax,company_base:"
+msgid "Base (Company Currency)"
+msgstr "Adóalap (vállalati pénznem)"
+
+msgctxt "field:account.invoice.tax,company_currency:"
+msgid "Company Currency"
+msgstr "Vállalat pénzneme"
+
+msgctxt "field:account.invoice.line,company_amount_cache:"
+msgid "Amount (Company Currency)"
+msgstr "Összeg (vállalati pénznem)"
+
+msgctxt "field:account.invoice.tax,company_amount_cache:"
+msgid "Amount (Company Currency)"
+msgstr "Összeg (vállalati pénznem)"
+
+msgctxt "field:account.invoice.tax,company_base_cache:"
+msgid "Base (Company Currency)"
+msgstr "Adóalap (vállalati pénznem)"
