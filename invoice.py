@@ -202,13 +202,13 @@ class Invoice(metaclass=PoolMeta):
                 }]
         cls.write(*to_write)
 
+        super().draft(invoices)
+
         line_to_write = []
         tax_to_write = []
         for invoice in invoices:
             line_to_write += list(invoice.lines or [])
             tax_to_write += list(invoice.taxes or [])
-
-        super().draft(invoices)
 
         InvoiceLine.write(line_to_write, {
             'company_amount_cache': None,
